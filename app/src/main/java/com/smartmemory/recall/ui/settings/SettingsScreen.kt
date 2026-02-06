@@ -193,7 +193,7 @@ fun ModelCard(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "${status.model.estimatedSizeMB} MB • ${status.model.minRamGB}GB RAM min",
+                        text = "${status.model.estimatedSizeMB} MB",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )

@@ -92,7 +92,7 @@ lint/generated/
 lint/outputs/
 lint/tmp/
 
-# MLC-specific
+# MLC-specific (Legacy)
 .mlc_env/
 mlc-models/
 model_artifacts/
@@ -100,7 +100,9 @@ release_packages/
 mlc_build.log
 mlc-package-config*.json
 
-# Crash logs
+# Recall App Specific
+Recall-Models/
+crash.log
 crash_log*.txt
 build_errors.txt
 chat_crash_log.txt

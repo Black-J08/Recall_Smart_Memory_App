@@ -12,6 +12,6 @@ interface SettingsRepository {
     fun setDarkMode(enabled: Boolean)
     
     fun getSelectedModel(): AIModel {
-        return AIModels.ALL_MODELS.find { it.id == selectedModelId.value } ?: AIModels.QWEN_05B_LITE
+        return AIModels.ALL_MODELS.find { it.id == selectedModelId.value } ?: AIModels.QWEN_2_5_0_5B
     }
 }

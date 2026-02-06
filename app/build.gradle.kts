@@ -42,9 +42,6 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
-        jniLibs {
-            useLegacyPackaging = true
-        }
     }
     sourceSets {
         getByName("main") {
@@ -81,7 +78,8 @@ dependencies {
     // OkHttp for network downloads
     implementation(libs.okhttp)
     // MediaPipe for Gemma-3 270M
-    implementation("com.google.mediapipe:tasks-genai:0.10.14")
+    // MediaPipe for Gemma-3 270M
+    implementation("com.google.mediapipe:tasks-genai:0.10.29")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

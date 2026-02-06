@@ -29,11 +29,7 @@ class HardwareProfiler @Inject constructor(
         val gpuVendor = getGPUVendor()
         val androidVersion = Build.VERSION.SDK_INT
 
-        val recommendedModel = when {
-            totalRamGB >= 8 -> AIModels.QWEN_3B_PRO
-            totalRamGB >= 6 -> AIModels.QWEN_15B_STANDARD
-            else -> AIModels.QWEN_05B_LITE
-        }
+        val recommendedModel = AIModels.QWEN_2_5_0_5B
 
         return DeviceProfile(
             totalRamGB = totalRamGB,

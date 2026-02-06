@@ -15,6 +15,6 @@ abstract class AiModule {
     @Binds
     @Singleton
     abstract fun bindAIEngine(
-        mlcAIEngine: com.smartmemory.recall.domain.ai.MLCAIEngine
+        mediaPipeAIEngine: com.smartmemory.recall.domain.ai.MediaPipeAIEngine
     ): AIEngine
 }

@@ -1,5 +1,6 @@
 package com.smartmemory.recall.ui.chat
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.smartmemory.recall.domain.model.ChatMessage
@@ -15,6 +16,16 @@ import com.smartmemory.recall.domain.ai.AIEngineState
 import com.smartmemory.recall.domain.ai.ModelManager
 import com.smartmemory.recall.domain.repository.SettingsRepository
 
+/**
+ * ViewModel responsible for managing the chat UI state and interaction logic.
+ *
+ * Key Responsibilities:
+ * - Handling user input and [sendMessage] actions.
+ * - Managing chat sessions (auto-creation, selection).
+ * - Orchestrating AI generation via [AIEngine].
+ * - Maintaining UI state ([ChatUiState]) including loading, typing indicators, and errors.
+ * - Robust error handling (e.g., auto-recovering from missing sessions).
+ */
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
@@ -93,8 +104,22 @@ class ChatViewModel @Inject constructor(
     }
 
     fun sendMessage(text: String) {
-        val sessionId = _uiState.value.currentSessionId ?: return
+        Log.d("ChatViewModel", "sendMessage called with: $text")
         if (text.isBlank()) return
+
+        val sessionId = _uiState.value.currentSessionId
+        if (sessionId == null) {
+            Log.w("ChatViewModel", "No active session, creating new one...")
+            val newSession = ChatSession(title = "New Conversation")
+            viewModelScope.launch {
+                chatRepository.saveSession(newSession).onSuccess {
+                    selectSession(newSession.id)
+                    // Recursive call now that session exists
+                    sendMessage(text)
+                }
+            }
+            return
+        }
 
         val userMessage = ChatMessage(text = text, isUser = true)
         
@@ -109,9 +134,11 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isAITyping = true) }
             
+            Log.d("ChatViewModel", "Requesting response from engine for: $prompt")
             var fullResponse = ""
             
             aiEngine.generateResponse(prompt).collect { chunk ->
+                Log.d("ChatViewModel", "Received chunk: $chunk")
                 fullResponse += chunk
                 
                 // Update UI state with partial message for streaming effect

@@ -10,7 +10,7 @@ import javax.inject.Singleton
 
 @Singleton
 class SettingsRepositoryImpl @Inject constructor() : SettingsRepository {
-    private val _selectedModelId = MutableStateFlow(AIModels.QWEN_05B_LITE.id)
+    private val _selectedModelId = MutableStateFlow(AIModels.QWEN_2_5_0_5B.id)
     override val selectedModelId: StateFlow<String> = _selectedModelId.asStateFlow()
 
     private val _isDarkMode = MutableStateFlow(true)
