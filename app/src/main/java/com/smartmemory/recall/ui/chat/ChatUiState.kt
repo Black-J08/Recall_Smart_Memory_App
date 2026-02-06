@@ -10,7 +10,8 @@ data class ChatUiState(
     val currentSessionId: String? = null,
     val messages: List<ChatMessage> = emptyList(),
     val isLoading: Boolean = false,
-    val isAITyping: Boolean = false,
+    val typingSessionIds: Set<String> = emptySet(),
+    val pendingAiResponse: String? = null, // Transient state for streaming
     val error: String? = null,
     val aiState: AIEngineState = AIEngineState.Idle
 )

@@ -19,8 +19,8 @@ This document tracks the status of features in the Recall application, including
 - **Session Management**: 
   - Automatic new session creation and robust cleanup of empty sessions.
   - History drawer with selection indicators and prominent "New Chat" action.
-  - Data persisted in local Room database with concurrency-safe message routing.
-- **Streaming Responses**: Real-time token generation with session-specific typing indicators.
+  - **Context Isolation**: Strict message collector management prevents "ghost conversation" switching and UI leaks.
+- **Streaming Responses**: Real-time token generation using **Transient UI State** to prevent flickering and DB contention.
 - **Keyboard Optimization**: `reverseLayout` and `adjustResize` support ensures messages stay visible when typing.
 
 ### Memory Capture (Feed)

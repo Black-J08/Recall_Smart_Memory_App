@@ -25,4 +25,10 @@ interface ChatDao {
 
     @Update
     suspend fun updateSession(session: ChatSessionEntity)
+
+    @Query("UPDATE chat_sessions SET title = :newTitle WHERE id = :sessionId")
+    suspend fun updateTitle(sessionId: String, newTitle: String)
+
+    @Query("DELETE FROM chat_sessions WHERE id NOT IN (SELECT DISTINCT session_id FROM chat_messages)")
+    suspend fun deleteEmptySessions()
 }

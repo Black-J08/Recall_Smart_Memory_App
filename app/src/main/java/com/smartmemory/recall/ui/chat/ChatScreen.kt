@@ -1,11 +1,13 @@
 package com.smartmemory.recall.ui.chat
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,7 +15,9 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +26,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.smartmemory.recall.domain.model.ChatMessage
@@ -32,7 +37,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel,
-    onMenuClick: () -> Unit
+    onMenuClick: () -> Unit,
+    onSettingsClick: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
     
@@ -43,6 +49,7 @@ fun ChatScreen(
     ChatContent(
         state = state,
         onMenuClick = onMenuClick,
+        onSettingsClick = onSettingsClick,
         onSendMessage = { viewModel.sendMessage(it) }
     )
 }
@@ -52,6 +59,7 @@ fun ChatScreen(
 fun ChatContent(
     state: ChatUiState,
     onMenuClick: () -> Unit,
+    onSettingsClick: () -> Unit,
     onSendMessage: (String) -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -59,12 +67,14 @@ fun ChatContent(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
+            TopAppBar(
                 title = {
                     Text(
                         text = "Recall AI",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = FontFamily.SansSerif
+                        )
                     )
                 },
                 navigationIcon = {
@@ -72,8 +82,13 @@ fun ChatContent(
                         Icon(Icons.Default.Menu, contentDescription = "History")
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
+                actions = {
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.95f),
                     titleContentColor = MaterialTheme.colorScheme.onBackground
                 )
             )
@@ -87,54 +102,80 @@ fun ChatContent(
                 .padding(padding)
         ) {
             // AI Engine Status Indicator
-            when (val aiState = state.aiState) {
-                is AIEngineState.Loading -> {
-                    LinearProgressIndicator(
-                        progress = { aiState.progress },
-                        modifier = Modifier.fillMaxWidth().height(2.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                is AIEngineState.Error -> {
-                    Surface(
-                        color = MaterialTheme.colorScheme.errorContainer,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = aiState.message,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            modifier = Modifier.padding(8.dp)
+            AnimatedVisibility(
+                visible = state.aiState is AIEngineState.Loading || state.aiState is AIEngineState.Error
+            ) {
+                when (val aiState = state.aiState) {
+                    is AIEngineState.Loading -> {
+                        LinearProgressIndicator(
+                            progress = { aiState.progress },
+                            modifier = Modifier.fillMaxWidth().height(2.dp),
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
+                    is AIEngineState.Error -> {
+                        Surface(
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = aiState.message,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        }
+                    }
+                    else -> Unit
                 }
-                else -> Unit
             }
 
             val listState = rememberLazyListState()
             
-            LaunchedEffect(state.messages.size, state.isAITyping) {
-                if (state.messages.isNotEmpty()) {
-                    listState.animateScrollToItem(state.messages.size - 1)
+            // Scroll to bottom (which is index 0 in reverse layout) on new message
+            val isTyping = state.typingSessionIds.contains(state.currentSessionId)
+            LaunchedEffect(state.messages.size, isTyping) {
+                 // With reverse layout, the "bottom" is the start of the list, so we scroll to 0
+                if (state.messages.isNotEmpty() || isTyping) {
+                    listState.animateScrollToItem(0)
                 }
             }
 
             LazyColumn(
                 state = listState,
+                reverseLayout = true,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(state.messages) { message ->
-                    ChatBubble(message)
-                }
-                
-                if (state.isAITyping) {
+                if (isTyping) {
                     item {
                         TypingIndicator()
                     }
+                }
+
+                if (state.pendingAiResponse != null) {
+                    val streamingMessage = ChatMessage(
+                        text = state.pendingAiResponse!!,
+                        isUser = false,
+                        timestamp = System.currentTimeMillis()
+                    )
+                    item {
+                        ChatBubble(streamingMessage, isFirstInGroup = true)
+                    }
+                }
+
+                // In reverse layout, list starts from bottom.
+                // We reverse the messages so the latest message is at index 0 (bottom).
+                itemsIndexed(state.messages.asReversed()) { index, message ->
+                    // Check if previous message (visually above, so next in list) was from same sender
+                    // In reversed list, "previous" message is at index + 1
+                    val prevMessage = state.messages.asReversed().getOrNull(index + 1)
+                    val isFirstInGroup = prevMessage?.isUser != message.isUser
+                    
+                    ChatBubble(message, isFirstInGroup)
                 }
             }
 
@@ -151,17 +192,19 @@ fun ChatContent(
 }
 
 @Composable
-fun ChatBubble(message: ChatMessage) {
+fun ChatBubble(message: ChatMessage, isFirstInGroup: Boolean) {
     val isUser = message.isUser
     val alignment = if (isUser) Alignment.End else Alignment.Start
-    val bubbleColor = if (isUser) Color.Transparent else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-    val textColor = MaterialTheme.colorScheme.onSurface
+    val bubbleColor = if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    val textColor = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
     
-    val shape = if (isUser) {
-        RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 16.dp, bottomEnd = 2.dp)
-    } else {
-        RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 2.dp, bottomEnd = 16.dp)
-    }
+    // Dynamic rounded corners
+    val topStart = if (!isUser && !isFirstInGroup) 4.dp else 20.dp
+    val topEnd = if (isUser && !isFirstInGroup) 4.dp else 20.dp
+    val bottomStart = 20.dp
+    val bottomEnd = 20.dp
+    
+    val shape = RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart)
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -170,15 +213,25 @@ fun ChatBubble(message: ChatMessage) {
         Surface(
             color = bubbleColor,
             shape = shape,
-            border = if (isUser) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)) else null,
-            modifier = Modifier.widthIn(max = 280.dp)
+            tonalElevation = if (isUser) 2.dp else 0.dp,
+            modifier = Modifier.widthIn(max = 300.dp)
         ) {
-            Text(
-                text = message.text,
-                modifier = Modifier.padding(12.dp),
-                style = MaterialTheme.typography.bodyMedium,
-                color = textColor
-            )
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text(
+                    text = message.text,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = textColor
+                )
+                
+                if (message.timestamp > 0) {
+                    Text(
+                        text = formatTime(message.timestamp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = textColor.copy(alpha = 0.6f),
+                        modifier = Modifier.align(Alignment.End).padding(top = 4.dp)
+                    )
+                }
+            }
         }
     }
 }
@@ -192,63 +245,73 @@ fun ChatInputBar(
     val colorScheme = MaterialTheme.colorScheme
     
     val rainbowBrush = Brush.linearGradient(
-        colors = listOf(Violet, Indigo, Blue, Green, Yellow, Orange, Red)
+        colors = listOf(
+            MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.tertiary
+        )
     )
 
     Row(
         modifier = Modifier
             .padding(16.dp)
             .fillMaxWidth()
-            .height(56.dp)
-            .clip(CircleShape)
-            .border(1.dp, rainbowBrush, CircleShape)
-            .background(colorScheme.surface)
+            .height(64.dp)
+            .clip(RoundedCornerShape(32.dp))
+            .background(colorScheme.surfaceVariant.copy(alpha = 0.3f))
             .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onAttachClick) {
-            Icon(Icons.Default.Add, contentDescription = "Attach", tint = colorScheme.primary)
+            Icon(Icons.Default.Add, contentDescription = "Attach", tint = colorScheme.onSurfaceVariant)
         }
         
         BasicTextField(
             value = text,
             onValueChange = { text = it },
-            modifier = Modifier.weight(1f),
-            textStyle = MaterialTheme.typography.bodyMedium.copy(color = colorScheme.onSurface),
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 8.dp),
+            textStyle = MaterialTheme.typography.bodyLarge.copy(color = colorScheme.onSurface),
             cursorBrush = SolidColor(colorScheme.primary),
             decorationBox = { innerTextField ->
-                if (text.isEmpty()) {
-                    Text(
-                        "Ask Recall...",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = colorScheme.onSurface.copy(alpha = 0.5f)
-                    )
+                Box(contentAlignment = Alignment.CenterStart) {
+                     if (text.isEmpty()) {
+                        Text(
+                            "Message...",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+                    }
+                    innerTextField()
                 }
-                innerTextField()
             }
         )
 
+        val isSendEnabled = text.isNotBlank()
+        
         IconButton(
             onClick = {
-                if (text.isNotBlank()) {
+                if (isSendEnabled) {
                     onSendMessage(text)
                     text = ""
                 }
             },
-            enabled = text.isNotBlank()
+            enabled = isSendEnabled
         ) {
+            val buttonColor = if (isSendEnabled) colorScheme.primary else colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+            
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(44.dp)
                     .clip(CircleShape)
-                    .background(if (text.isNotBlank()) colorScheme.primary else Color.Gray.copy(alpha = 0.3f)),
+                    .background(buttonColor),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.Send,
                     contentDescription = "Send",
-                    tint = Color.White,
-                    modifier = Modifier.size(18.dp)
+                    tint = if (isSendEnabled) colorScheme.onPrimary else colorScheme.surface,
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
@@ -259,10 +322,20 @@ fun ChatInputBar(
 fun TypingIndicator() {
     Row(
         modifier = Modifier
-            .padding(12.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.Start
     ) {
-        Text("Recall is thinking...", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+        // Simple pulsing dot animation could be added here
+        Text(
+            "Recall is thinking...",
+            style = MaterialTheme.typography.labelSmall.copy(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic),
+            color = MaterialTheme.colorScheme.primary
+        )
     }
+}
+
+private fun formatTime(timestamp: Long): String {
+    val sdf = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+    return sdf.format(java.util.Date(timestamp))
 }

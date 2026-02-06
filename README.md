@@ -5,27 +5,24 @@ Recall is a privacy-focused Android application that runs a powerful Large Langu
 ## 🚀 Key Features
 
 -   **100% Offline AI**: Runs strictly on-device with no data leaving your phone.
--   **Ultra-Low RAM Support**: Optimized for devices with as little as 2GB RAM.
--   **MediaPipe Backend**: Uses Google's efficient `tasks-genai` library for inference.
--   **Qwen 2.5 0.5B**: Powered by the Qwen-0.5B-Instruct model (Int8 Quantized), delivering smart responses in a tiny footprint (~550MB).
--   **Clean Architecture**: Built with Kotlin, Jetpack Compose, Hilt, and MVVM.
+-   **Safe Multi-Session Chat**: Robust synchronization prevents message misrouting even when switching conversations rapidly.
+-   **Production-Grade UI**: Uses "Transient UI State" for flicker-free streaming responses and `reverseLayout` for perfect soft-keyboard handling.
+-   **MediaPipe Backend**: Uses Google's efficient `tasks-genai` library with **Stateful Sessions** and KV-caching.
+-   **Qwen 2.5 0.5B**: Powered by Qwen-0.5B-Instruct (Int8), providing a smart 550MB footprint.
 
 ## 🛠️ Architecture
 
-The app follows standard Android modern architecture principles:
+Recall follows Modern Android Architecture (MVI/MVVM) with a focus on thread-safety and offline-first reliability:
 
--   **UI Layer**: Jetpack Compose + `ChatViewModel`.
--   **Domain Layer**: Clean interfaces for `AIEngine`, `SettingsRepository`, and `ChatRepository`.
--   **Data Layer**:
-    -   `MediaPipeAIEngine`: Implementation of the AI interface using MediaPipe.
-    -   `Room Database`: Local storage for chat history.
-    -   `FileDownloader`: Resumable downloads for AI models.
+-   **Transient UI State**: Streaming LLM output is held in a temporary state before persisting, ensuring DB performance and UI stability.
+-   **Stateful Engine**: `MediaPipeAIEngine` manages long-form context via `LlmInferenceSession`, complete with history truncation to prevent OOM.
+-   **Clean Architecture**: Separation of concerns between `AIEngine`, `ChatRepository`, and the UI.
+-   **Room DB**: Reactive message persistence with strict collector management to prevent data leaks.
 
-### AI Engine Strategy
-We migrated from MLC LLM to **MediaPipe** to improve device compatibility and simplify the build process.
--   **Engine**: `MediaPipeAIEngine` (wraps `LlmInference`).
--   **Model**: `.task` bundle (includes model + tokenizer).
--   **Download**: Models are hosted on GitHub Releases to bypass authentication issues.
+### Engineering Highlights
+-   **Mutex-Guarded Inference**: Serialized requests to the single-instance LLM engine prevent corrupted outputs.
+-   **Stateless Title Generation**: Concurrent task-specific generation that doesn't pollute the main conversation context.
+-   **Keyboard Resilience**: `adjustResize` and reverse indexing ensure the input field and latest messages are always visible.
 
 ## 📱 Getting Started
 

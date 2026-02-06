@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.smartmemory.recall.domain.model.ChatSession
@@ -28,85 +29,102 @@ fun ChatHistoryDrawer(
     onNewChat: () -> Unit
 ) {
     ModalDrawerSheet(
-        drawerContainerColor = Color(0xFF0A0A0A),
+        drawerContainerColor = MaterialTheme.colorScheme.surface,
         modifier = Modifier
             .fillMaxHeight()
-            .width(280.dp)
+            .width(300.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding()
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
+            // Header
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primaryContainer,
+                                MaterialTheme.colorScheme.surface
+                            )
+                        )
+                    )
+                    .padding(24.dp),
+                contentAlignment = Alignment.BottomStart
+            ) {
+                Text(
+                    text = "Conversations",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
             
-            Button(
+            // New Chat Button
+            ExtendedFloatingActionButton(
                 onClick = onNewChat,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                elevation = FloatingActionButtonDefaults.elevation(2.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("New Chat")
+                Text("New Chat", style = MaterialTheme.typography.labelLarge)
             }
 
             Spacer(modifier = Modifier.height(24.dp))
             
-            Text(
-                "Recent Conversations",
-                style = MaterialTheme.typography.labelMedium,
-                color = Color.Gray,
-                modifier = Modifier.padding(horizontal = 24.dp)
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 24.dp),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
             )
             
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             LazyColumn(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 items(sessions) { session ->
                     val isSelected = session.id == currentSessionId
                     
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .padding(horizontal = 8.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(if (isSelected) Color.White.copy(alpha = 0.05f) else Color.Transparent)
-                            .clickable { onSessionSelected(session.id) },
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .width(3.dp)
-                                .background(if (isSelected) Violet else Color.Transparent)
-                        )
-                        
-                        Spacer(modifier = Modifier.width(16.dp))
-                        
-                        Icon(
-                            Icons.Default.ChatBubbleOutline,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            tint = if (isSelected) Color.White else Color.Gray
-                        )
-                        
-                        Spacer(modifier = Modifier.width(12.dp))
-                        
-                        Text(
-                            text = session.title,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = if (isSelected) Color.White else Color.Gray,
-                            maxLines = 1,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                        )
-                    }
+                    NavigationDrawerItem(
+                        label = {
+                            Text(
+                                text = session.title,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
+                        },
+                        selected = isSelected,
+                        onClick = { onSessionSelected(session.id) },
+                        icon = {
+                            Icon(
+                                Icons.Default.ChatBubbleOutline,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = NavigationDrawerItemDefaults.colors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            unselectedContainerColor = Color.Transparent,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        modifier = Modifier.height(52.dp)
+                    )
                 }
             }
         }

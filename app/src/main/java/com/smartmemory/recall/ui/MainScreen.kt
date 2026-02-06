@@ -94,26 +94,11 @@ fun MainContent(onNavigateToSettings: () -> Unit) {
                         }
                         1 -> ChatScreen(
                             viewModel = chatViewModel,
-                            onMenuClick = { scope.launch { drawerState.open() } }
+                            onMenuClick = { scope.launch { drawerState.open() } },
+                            onSettingsClick = onNavigateToSettings
                         )
                     }
                 }
-            }
-
-            // Floating Settings Icon (Persistent)
-            IconButton(
-                onClick = onNavigateToSettings,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 48.dp, end = 16.dp)
-                    .size(56.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = "Settings",
-                    modifier = Modifier.size(32.dp),
-                    tint = Color.Gray
-                )
             }
         }
     }

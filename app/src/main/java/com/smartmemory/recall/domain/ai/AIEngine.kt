@@ -23,6 +23,11 @@ interface AIEngine {
     suspend fun initialize(onProgress: (Float) -> Unit): Result<Unit>
 
     /**
+     * Starts a new session or resets the current one with the given history.
+     */
+    suspend fun startSession(history: List<Any>): Result<Unit>
+
+    /**
      * Generates a streaming response for the given prompt.
      */
     fun generateResponse(prompt: String): Flow<String>

@@ -49,4 +49,12 @@ class ChatRepositoryImpl @Inject constructor(
     override suspend fun deleteSession(sessionId: String): Result<Unit> = runCatching {
         chatDao.deleteSession(sessionId)
     }
+
+    override suspend fun updateSessionTitle(sessionId: String, newTitle: String): Result<Unit> = runCatching {
+        chatDao.updateTitle(sessionId, newTitle)
+    }
+
+    override suspend fun deleteEmptySessions(): Result<Unit> = runCatching {
+        chatDao.deleteEmptySessions()
+    }
 }

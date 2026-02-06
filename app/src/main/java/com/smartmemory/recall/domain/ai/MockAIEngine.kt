@@ -25,6 +25,10 @@ class MockAIEngine @Inject constructor() : AIEngine {
         return Result.success(Unit)
     }
 
+    override suspend fun startSession(history: List<Any>): Result<Unit> {
+        return Result.success(Unit)
+    }
+
     override fun generateResponse(prompt: String): Flow<String> = flow {
         val fullResponse = "This is a mock response from Recall AI. Since I'm in mock mode, I'm just acknowledging your prompt: \"$prompt\". In a real scenario, I would be running on your phone's GPU!"
         
