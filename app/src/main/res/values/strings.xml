@@ -1,3 +1,23 @@
 <resources>
     <string name="app_name">Recall</string>
+    
+    <!-- Camera Feature -->
+    <string name="camera_permission_required">Camera permission required</string>
+    <string name="grant_permission">Grant Permission</string>
+    <string name="capture_image_title">Capture an Image</string>
+    <string name="camera_label">Camera</string>
+    <string name="gallery_label">Gallery</string>
+    <string name="cancel_label">Cancel</string>
+    <string name="image_memory_label">Image Memory</string>
+    <string name="flip_camera_desc">Flip Camera</string>
+    <string name="capture_desc">Capture</string>
+    <string name="cancel_desc">Cancel</string>
+    <string name="text_memory_label">Text Note</string>
+
+    <!-- Audio Feature -->
+    <string name="audio_memory_label">Audio Recording</string>
+    <string name="recording_status">Recording...</string>
+    <string name="ready_to_record">Ready to Record</string>
+    <string name="start_recording">Start Recording</string>
+    <string name="stop_recording">Stop</string>
 </resources>

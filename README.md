@@ -8,8 +8,11 @@ Recall is a privacy-focused Android application that runs a powerful Large Langu
 -   **On-Device RAG (Retrieval-Augmented Generation)**: Automatically remembers and utilizes your saved notes/memories during chat conversations for grounded responses.
 -   **Safe Multi-Session Chat**: Robust synchronization prevents message misrouting even when switching conversations rapidly.
 -   **Production-Grade UI**: Uses "Transient UI State" for flicker-free streaming responses and `reverseLayout` for perfect soft-keyboard handling.
--   **MediaPipe Backend**: Uses Google's efficient `tasks-genai` library with **Stateful Sessions** and KV-caching.
--   **Qwen 2.5 0.5B**: Powered by Qwen-0.5B-Instruct (Int8), providing a smart 550MB footprint.
+-   **Multiple Tiers**: Choose between Lite (Qwen 0.5B) for speed or Standard (Qwen 1.5B) for smarter reasoning.
+-   **Qwen 2.5 Family**: Powered by state-of-the-art Qwen-Instruct (Int8) models.
+-   **Rich Media Capture**:
+    -   **Hybrid Image**: Capture photos via CameraX or select from Gallery.
+    -   **Voice Notes**: Record high-quality AAC audio with live waveform visualization.
 
 ## 🛠️ Architecture
 
@@ -44,7 +47,7 @@ Recall follows Modern Android Architecture (MVI/MVVM) with a focus on thread-saf
 4.  Run on device: `./gradlew installDebug`.
 
 ### Usage
-1.  **Download Model**: On first launch, go to **Settings** and tap download on "Qwen 2.5 0.5B".
+1.  **Download Model**: On first launch, go to **Settings** and choose your preferred model tier (Lite or Standard).
 2.  **Chat**: Navigate to the Chat screen and start typing.
 
 ## 📦 Adding New Models

@@ -13,6 +13,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.smartmemory.recall.domain.capture.MemoryTypeStrategy
 
+import androidx.compose.ui.res.stringResource
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CaptureBottomSheet(
@@ -63,7 +65,7 @@ fun CaptureOptionsList(
             items(strategies) { strategy ->
                 CaptureOptionItem(
                     icon = strategy.icon,
-                    label = strategy.label,
+                    labelRes = strategy.label,
                     color = strategy.color,
                     onClick = { onStrategySelected(strategy) }
                 )
@@ -75,7 +77,7 @@ fun CaptureOptionsList(
 @Composable
 fun CaptureOptionItem(
     icon: ImageVector,
-    label: String,
+    labelRes: Int,
     color: androidx.compose.ui.graphics.Color,
     onClick: () -> Unit
 ) {
@@ -98,7 +100,7 @@ fun CaptureOptionItem(
             )
             Spacer(modifier = Modifier.width(16.dp))
             Text(
-                text = label,
+                text = stringResource(labelRes),
                 style = MaterialTheme.typography.bodyLarge
             )
         }

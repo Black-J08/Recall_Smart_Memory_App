@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShortText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.smartmemory.recall.R
 import com.smartmemory.recall.data.local.entity.MemoryType
 import com.smartmemory.recall.domain.capture.MemoryTypeStrategy
 import com.smartmemory.recall.domain.model.MemoryItem
@@ -14,7 +15,7 @@ import javax.inject.Inject
 class TextCaptureStrategy @Inject constructor() : MemoryTypeStrategy {
     override val type = MemoryType.TEXT
     override val icon: ImageVector = Icons.Default.ShortText
-    override val label = "Text Note"
+    override val label = R.string.text_memory_label
     override val color = MemoryTextDark
     
     @Composable

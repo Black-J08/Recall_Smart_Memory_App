@@ -9,7 +9,7 @@ import com.smartmemory.recall.domain.model.MemoryItem
 interface MemoryTypeStrategy {
     val type: MemoryType
     val icon: ImageVector
-    val label: String
+    val label: Int
     val color: Color
     
     @Composable

@@ -44,5 +44,16 @@ object AIModels {
         downloadUrl = "https://github.com/Black-J08/Recall-Models/releases/download/v1.0.0/qwen2.5-0.5b-q8.task"
     )
 
-    val ALL_MODELS = listOf(QWEN_2_5_0_5B)
+    val QWEN_2_5_1_5B = AIModel(
+        id = "qwen_2_5_1_5b_q8",
+        displayName = "Qwen 2.5 1.5B (Q8)",
+        tier = ModelTier.STANDARD,
+        sizeDescription = "1.5B Params (Q8)",
+        estimatedSizeMB = 1500,
+        description = "Balanced model. Smarter reasoning with moderate speed.",
+        filename = "qwen2.5-1.5b-q8.task",
+        downloadUrl = "https://github.com/Black-J08/Recall-Models/releases/download/v2.0.0/qwen2.5-1.5b-q8.task"
+    )
+
+    val ALL_MODELS = listOf(QWEN_2_5_0_5B, QWEN_2_5_1_5B)
 }

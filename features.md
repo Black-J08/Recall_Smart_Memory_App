@@ -8,8 +8,9 @@ This document tracks the status of features in the Recall application, including
 - **Offline LLM Inference**: 
   - Powered by **MediaPipe** (Google `tasks-genai`).
   - Runs 100% on-device (CPU/GPU).
-- **Supported Model**:
-  - **Qwen 2.5 0.5B (Int8)**: Highly optimized for mobile (~550MB). Verified working on devices with >= 2GB RAM.
+- **Supported Models**:
+  - **Qwen 2.5 0.5B (Int8)**: Lite tier optimized for efficiency (~550MB). Best for devices with 2-4GB RAM.
+  - **Qwen 2.5 1.5B (Int8)**: Standard tier balanced for reasoning (~1.5GB). Recommended for devices with 6GB+ RAM.
 - **On-Device RAG (Retrieval-Augmented Generation)**: 
   - **Memory Retrieval**: Uses captured notes (Text/Audio/Image captions) as grounded context for the Chat LLM.
   - **Local Embedding**: Utilizes MediaPipe **Text Embedder** (Universal Sentence Encoder) for local vectorization.
@@ -30,7 +31,13 @@ This document tracks the status of features in the Recall application, including
 
 ### Memory Capture (Feed)
 - **Text Notes**: Capture text-based memories via `TextCaptureStrategy`.
-- **Feed UI**: Timeline view of captured memories.
+- **Image Capture**: 
+  - **Hybrid Acquisition**: Choice between **CameraX** (in-app viewfinder) and **System Photo Picker** (Gallery).
+  - **Privacy First**: Uses scoped storage via `MediaStorageManager` and privacy-preserving pickers.
+- **Audio Capture**:
+  - **High Fidelity**: Records in AAC (`.m4a`) format for optimized quality/size.
+  - **Visual Feedback**: Real-time **Waveform Visualization** using `AudioRecorder` amplitude data.
+- **Feed UI**: Timeline view of captured memories with type-specific cards (Text/Image/Audio).
 
 ### App Infrastructure
 - **Model Management**: 
@@ -56,16 +63,9 @@ This document tracks the status of features in the Recall application, including
   - *Stateful Sessions*: Upgrade to **LlmInferenceSession** for KV-cached, high-performance long-form conversations.
   - *Smart Restoration*: Restore the last ~10-20 turns of history when switching chats to warm the AI context.
 
-### Memory Capture Enhancements
-- **Image Capture**: 
-  - *Current Status*: `ImageCaptureStrategy` exists as a placeholder ("Coming soon").
-  - *Plan*: Integrate CameraX or System Photo Picker.
-- **Audio Capture**:
-  - *Current Status*: `AudioCaptureStrategy` exists as a placeholder ("Coming soon").
-  - *Plan*: Voice recording + Transcription (Whisper-tiny on-device?).
 
 ### Model Support
-- **Larger Models**: Support for Qwen 1.5B or 3B for devices with more RAM (8GB+).
+- **Larger Models**: Support for Qwen 3B for devices with more RAM (8GB+).
 - **Custom Model Import**: Allow users to import their own `.task` bundles.
 
 ---
