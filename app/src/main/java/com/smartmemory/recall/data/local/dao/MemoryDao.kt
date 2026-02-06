@@ -27,4 +27,38 @@ interface MemoryDao {
     
     @Query("SELECT * FROM memories WHERE metadata_json LIKE '%' || :query || '%'")
     fun searchMemories(query: String): Flow<List<MemoryEntity>>
+
+    @Query("SELECT id, metadata_json, embedding FROM memories WHERE embedding IS NOT NULL")
+    fun getAllMemoriesWithEmbeddings(): Flow<List<MemoryEmbeddingTuple>>
+}
+
+/**
+ * Lightweight DTO for vector search.
+ * We only need the ID to retrieve the full item later (if needed), 
+ * the text content (extracted from metadata), and the vector.
+ */
+data class MemoryEmbeddingTuple(
+    @ColumnInfo(name = "id") val id: Long,
+    @ColumnInfo(name = "metadata_json") val metadataJson: String,
+    @ColumnInfo(name = "embedding", typeAffinity = ColumnInfo.BLOB) val embedding: ByteArray
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as MemoryEmbeddingTuple
+
+        if (id != other.id) return false
+        if (metadataJson != other.metadataJson) return false
+        if (!embedding.contentEquals(other.embedding)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + metadataJson.hashCode()
+        result = 31 * result + embedding.contentHashCode()
+        return result
+    }
 }

@@ -14,7 +14,8 @@ import com.smartmemory.recall.data.local.entity.MemoryEntity
         ChatSessionEntity::class,
         ChatMessageEntity::class
     ],
-    version = 2,
+
+    version = 3,
     exportSchema = true
 )
 abstract class RecallDatabase : RoomDatabase() {

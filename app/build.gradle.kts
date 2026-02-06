@@ -43,6 +43,10 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    
+    aaptOptions {
+        noCompress += "tflite"
+    }
     sourceSets {
         getByName("main") {
             java.srcDirs("src/main/java")
@@ -80,6 +84,7 @@ dependencies {
     // MediaPipe for Gemma-3 270M
     // MediaPipe for Gemma-3 270M
     implementation("com.google.mediapipe:tasks-genai:0.10.29")
+    implementation("com.google.mediapipe:tasks-text:0.10.14")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

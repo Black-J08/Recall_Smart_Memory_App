@@ -5,6 +5,7 @@ Recall is a privacy-focused Android application that runs a powerful Large Langu
 ## 🚀 Key Features
 
 -   **100% Offline AI**: Runs strictly on-device with no data leaving your phone.
+-   **On-Device RAG (Retrieval-Augmented Generation)**: Automatically remembers and utilizes your saved notes/memories during chat conversations for grounded responses.
 -   **Safe Multi-Session Chat**: Robust synchronization prevents message misrouting even when switching conversations rapidly.
 -   **Production-Grade UI**: Uses "Transient UI State" for flicker-free streaming responses and `reverseLayout` for perfect soft-keyboard handling.
 -   **MediaPipe Backend**: Uses Google's efficient `tasks-genai` library with **Stateful Sessions** and KV-caching.
@@ -15,8 +16,10 @@ Recall is a privacy-focused Android application that runs a powerful Large Langu
 Recall follows Modern Android Architecture (MVI/MVVM) with a focus on thread-safety and offline-first reliability:
 
 -   **Transient UI State**: Streaming LLM output is held in a temporary state before persisting, ensuring DB performance and UI stability.
+-   **On-Device Vector Search**: Uses MediaPipe `TextEmbedder` (Universal Sentence Encoder) to convert memories into 512D vectors, stored efficiently as BLOBs in Room.
+-   **Semantic Retrieval**: `VectorSearchService` performs in-memory Cosine Similarity search to find the most relevant context for your queries.
 -   **Stateful Engine**: `MediaPipeAIEngine` manages long-form context via `LlmInferenceSession`, complete with history truncation to prevent OOM.
--   **Clean Architecture**: Separation of concerns between `AIEngine`, `ChatRepository`, and the UI.
+-   **Clean Architecture**: Separation of concerns between `AIEngine`, `VectorSearchService`, `ChatRepository`, and the UI.
 -   **Room DB**: Reactive message persistence with strict collector management to prevent data leaks.
 
 ### Engineering Highlights

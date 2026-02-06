@@ -10,10 +10,13 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import com.smartmemory.recall.domain.ai.EmbeddingService
+
 @Singleton
 class MemoryRepositoryImpl @Inject constructor(
     private val dao: MemoryDao,
-    private val serializer: MemoryJsonSerializer
+    private val serializer: MemoryJsonSerializer,
+    private val embeddingService: EmbeddingService
 ) : MemoryRepository {
     
     override fun getMemories(): Flow<List<MemoryItem>> =
@@ -27,17 +30,46 @@ class MemoryRepositoryImpl @Inject constructor(
         }
     
     override suspend fun saveMemory(item: MemoryItem): Result<Long> = runCatching {
-        val entity = serializer.serialize(item)
+        var entity = serializer.serialize(item)
+        
+        // Generate embedding
+        val textToEmbed = extractTextContent(item)
+        if (!textToEmbed.isNullOrBlank()) {
+            val embeddingResult = embeddingService.embed(textToEmbed)
+            if (embeddingResult.isSuccess) {
+                entity = entity.copy(embedding = embeddingResult.getOrNull())
+            }
+        }
+        
         dao.insertMemory(entity)
     }
     
     override suspend fun deleteMemory(id: Long): Result<Unit> = runCatching {
-        // For now, we'll implement this when needed
-        // Would need to query by ID first, then delete
+        // Implementation pending: need lookup by ID first
+        // For MVP we might skip generic delete or fetch-then-delete
     }
     
     override suspend fun updateMemory(item: MemoryItem): Result<Unit> = runCatching {
-        val entity = serializer.serialize(item)
+        var entity = serializer.serialize(item)
+        
+        val textToEmbed = extractTextContent(item)
+        if (!textToEmbed.isNullOrBlank()) {
+            val embeddingResult = embeddingService.embed(textToEmbed)
+            if (embeddingResult.isSuccess) {
+                entity = entity.copy(embedding = embeddingResult.getOrNull())
+            }
+        }
+        
         dao.updateMemory(entity)
+    }
+
+    private fun extractTextContent(item: MemoryItem): String? {
+        return when (item) {
+            is MemoryItem.Text -> item.text
+            is MemoryItem.Audio -> item.transcription // Embed transcription if available
+            is MemoryItem.Image -> item.caption // Embed caption if available
+            // Future types
+            else -> null
+        }
     }
 }

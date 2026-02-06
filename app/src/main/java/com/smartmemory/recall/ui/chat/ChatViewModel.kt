@@ -33,7 +33,9 @@ class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
     private val aiEngine: AIEngine,
     private val modelManager: ModelManager,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    // [NEW] RAG Service
+    private val vectorSearchService: com.smartmemory.recall.domain.ai.VectorSearchService
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChatUiState())
@@ -43,7 +45,6 @@ class ChatViewModel @Inject constructor(
         loadSessions()
         initializeAI()
     }
-
     fun retryInitialization() {
         val currentState = _uiState.value.aiState
         if (currentState !is AIEngineState.Ready && currentState !is AIEngineState.Loading) {
@@ -157,7 +158,6 @@ class ChatViewModel @Inject constructor(
             viewModelScope.launch {
                 chatRepository.saveSession(newSession).onSuccess {
                     selectSession(newSession.id)
-                    // Recursive call now that session exists
                     sendMessage(text)
                 }
             }
@@ -168,32 +168,52 @@ class ChatViewModel @Inject constructor(
         
         viewModelScope.launch {
             chatRepository.saveMessage(sessionId, userMessage).onSuccess {
-                // Ensure the engine is fully switched to this session's context before generating
                 sessionSetupJob?.join()
-                generateAIResponse(sessionId, text)
+                
+                // [NEW] RAG Implementation
+                // 1. Retrieve relevant memories
+                val relevantMemories = vectorSearchService.findRelevantMemories(text)
+                Log.d("ChatViewModel", "Found ${relevantMemories.size} relevant memories")
+                
+                // 2. Construct Augmented Prompt
+                val augmentedPrompt = if (relevantMemories.isNotEmpty()) {
+                    buildString {
+                        append("Context information is below.\n---------------------\n")
+                        relevantMemories.forEachIndexed { index, match ->
+                            append("[Memory ${index + 1}]: ${match.text}\n")
+                        }
+                        append("---------------------\n")
+                        append("Given the context information and not prior knowledge, answer the query.\n")
+                        append("Query: $text")
+                    }
+                } else {
+                    text
+                }
+                
+                generateAIResponse(sessionId, augmentedPrompt, originalUserText = text)
             }
         }
     }
 
-    private fun generateAIResponse(sessionId: String, prompt: String) {
+    // Updated signature to keep tracking original text specifically if needed, 
+    // though here we just use the prompt for generation.
+    private fun generateAIResponse(sessionId: String, prompt: String, originalUserText: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(typingSessionIds = it.typingSessionIds + sessionId) }
             
-            Log.d("ChatViewModel", "Requesting response from engine for: $prompt")
+            Log.d("ChatViewModel", "Requesting response from engine for: $originalUserText (Context added)")
             var fullResponse = ""
             
             aiEngine.generateResponse(prompt).collect { chunk ->
                 Log.d("ChatViewModel", "Received chunk: $chunk")
                 fullResponse += chunk
                 
-                // Update transient UI state for streaming effect
                 _uiState.update { state ->
                     if (state.currentSessionId != sessionId) return@update state
                     state.copy(pendingAiResponse = fullResponse)
                 }
             }
             
-            // Clear stream and typing status
             _uiState.update { 
                 it.copy(
                     typingSessionIds = it.typingSessionIds - sessionId,
@@ -201,17 +221,17 @@ class ChatViewModel @Inject constructor(
                 ) 
             }
             
-            // Save final message to Room - this will trigger the UI update via flow collection
             val aiMessage = ChatMessage(text = fullResponse, isUser = false)
             chatRepository.saveMessage(sessionId, aiMessage)
             
-            // Generate title if distinct title hasn't been set yet
             val currentSession = _uiState.value.sessions.find { it.id == sessionId }
             if (currentSession?.title == "New Conversation") {
-                generateTitle(sessionId, prompt, fullResponse)
+                generateTitle(sessionId, originalUserText, fullResponse)
             }
         }
     }
+
+
     
     private fun generateTitle(sessionId: String, userPrompt: String, aiResponse: String) {
         viewModelScope.launch {
