@@ -30,9 +30,8 @@ class HardwareProfiler @Inject constructor(
         val androidVersion = Build.VERSION.SDK_INT
 
         val recommendedModel = when {
-            totalRamGB >= 8 -> AIModels.QWEN_3B_PRO
-            totalRamGB >= 6 -> AIModels.QWEN_15B_STANDARD
-            else -> AIModels.QWEN_05B_LITE
+            totalRamGB >= 3 -> AIModels.QWEN_05B
+            else -> AIModels.GEMMA_PLACEHOLDER
         }
 
         return DeviceProfile(

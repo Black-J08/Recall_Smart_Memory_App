@@ -9,11 +9,13 @@ import com.smartmemory.recall.domain.model.ModelStatus
 import com.smartmemory.recall.domain.repository.SettingsRepository
 import com.smartmemory.recall.util.NetworkRestrictionDetector
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -47,14 +49,16 @@ class SettingsViewModel @Inject constructor(
     fun refreshModelStatuses() {
         viewModelScope.launch {
             val selectedModelId = settingsRepository.selectedModelId.value
-            val statuses = AIModels.ALL_MODELS.map { model ->
-                val isDownloaded = modelManager.isModelDownloaded(model.id)
-                val progress = _downloadProgress.value[model.id]
-                
-                when {
-                    progress != null -> ModelStatus.Downloading(model, progress)
-                    isDownloaded -> ModelStatus.Downloaded(model, model.id == selectedModelId)
-                    else -> ModelStatus.NotDownloaded(model)
+            val statuses = withContext(Dispatchers.IO) {
+                AIModels.ALL_MODELS.map { model ->
+                    val isDownloaded = modelManager.isModelDownloaded(model.id)
+                    val progress = _downloadProgress.value[model.id]
+                    
+                    when {
+                        progress != null -> ModelStatus.Downloading(model, progress)
+                        isDownloaded -> ModelStatus.Downloaded(model, model.id == selectedModelId)
+                        else -> ModelStatus.NotDownloaded(model)
+                    }
                 }
             }
             _modelStatuses.value = statuses
@@ -71,9 +75,17 @@ class SettingsViewModel @Inject constructor(
             
             modelManager.downloadModel(modelId) { progress ->
                 _downloadProgress.value = _downloadProgress.value + (modelId to progress)
-                refreshModelStatuses()
+                
+                // Optimized: update ONLY the downloading model status without disk check
+                val currentStatuses = _modelStatuses.value.toMutableList()
+                val index = currentStatuses.indexOfFirst { it.model.id == modelId }
+                if (index != -1) {
+                    currentStatuses[index] = ModelStatus.Downloading(model, progress)
+                    _modelStatuses.value = currentStatuses
+                }
             }.onSuccess {
                 _downloadProgress.value = _downloadProgress.value - modelId
+                settingsRepository.setSelectedModel(modelId) // Auto-select after download
                 refreshModelStatuses()
             }.onFailure { error ->
                 _downloadProgress.value = _downloadProgress.value - modelId

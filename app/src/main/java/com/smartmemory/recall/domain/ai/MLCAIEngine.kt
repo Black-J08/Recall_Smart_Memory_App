@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -97,6 +98,20 @@ class MLCAIEngine @Inject constructor(
             
             // Load the model
             try {
+                // Manual library loading for Android (files in internal storage are NOT in system path)
+                // We find the .so file in the model directory and load it explicitly
+                val modelFileDir = File(modelDir)
+                val libFile = modelFileDir.listFiles()?.find { it.name.endsWith(".so") }
+                if (libFile != null) {
+                    Log.i(TAG, "Standard JNI loading: ${libFile.absolutePath}")
+                    try {
+                        System.load(libFile.absolutePath)
+                        Log.d(TAG, "Successfully registered model library with process.")
+                    } catch (e: UnsatisfiedLinkError) {
+                        Log.e(TAG, "Failed standard JNI load: ${e.message}")
+                    }
+                }
+
                 mlcEngine?.reload(modelDir, currentModel.modelLib)
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to reload model", e)

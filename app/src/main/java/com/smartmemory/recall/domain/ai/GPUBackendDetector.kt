@@ -72,20 +72,19 @@ class GPUBackendDetector @Inject constructor(
      * This is a heuristic check as Android doesn't provide a direct API.
      */
     private fun hasOpenCLSupport(): Boolean {
-        return try {
-            // OpenCL is commonly available on devices with Qualcomm/Mali GPUs
-            // We'll attempt to detect it by checking for common GPU vendors
-            val glRenderer = android.opengl.GLES20.glGetString(android.opengl.GLES20.GL_RENDERER)
-            val hasQualcomm = glRenderer?.contains("Adreno", ignoreCase = true) == true
-            val hasMali = glRenderer?.contains("Mali", ignoreCase = true) == true
-            
-            Log.d(TAG, "GPU Renderer: $glRenderer")
-            
-            // Most Adreno and Mali GPUs support OpenCL
-            hasQualcomm || hasMali
-        } catch (e: Exception) {
-            Log.w(TAG, "Error detecting OpenCL support", e)
-            false
+        // Safe check using Build info instead of GLES (which requires context)
+        val hardware = android.os.Build.HARDWARE.lowercase()
+        val board = android.os.Build.BOARD.lowercase()
+        val manufacturer = android.os.Build.MANUFACTURER.lowercase()
+        
+        return when {
+            // Qualcomm Adreno usually supports OpenCL
+            hardware.contains("qcom") || board.contains("msm") || board.contains("sm") -> true
+            // MediaTek Mali usually supports OpenCL
+            hardware.contains("mt") || board.contains("mt") -> true
+            // Samsung Exynos Mali usually supports OpenCL
+            hardware.contains("exynos") || manufacturer.contains("samsung") -> true
+            else -> false
         }
     }
     
