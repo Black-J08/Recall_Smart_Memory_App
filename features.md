@@ -62,6 +62,11 @@ This document tracks the status of features in the Recall application, including
 - **Context-Aware Chat**: 
   - *Stateful Sessions*: Upgrade to **LlmInferenceSession** for KV-cached, high-performance long-form conversations.
   - *Smart Restoration*: Restore the last ~10-20 turns of history when switching chats to warm the AI context.
+  - **RAG Context Visibility**: Show retrieved memories as a collapsed section in every user message to indicate what grounded context was used.
+
+### Memory Capture Enhancements
+- **Memory Management (CRUD)**: Ability to delete and modify existing text memories directly from the feed.
+- **Multimedia Vectorization**: Automatically summarize text, image, video, and audio recordings to store as semantic vectors for more powerful retrieval.
 
 
 ### Model Support
